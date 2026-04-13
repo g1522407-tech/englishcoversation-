@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#08111f"/>
+<title>Speak Up — A1/A2 Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08111f;--line:rgba(148,163,184,.14);--line2:rgba(148,163,184,.22);
+  --text:#ebf2ff;--soft:#afbdd4;--dim:#7e90ad;
+  --indigo:#7c8cff;--cyan:#54e2ff;--green:#44d39a;--amber:#f7b955;--red:#ff6b81;
+  --r:18px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{min-height:100%;background:
+  radial-gradient(circle at 20% 8%,rgba(84,226,255,.11) 0,transparent 35%),
+  radial-gradient(circle at 80% 5%,rgba(124,140,255,.13) 0,transparent 30%),
+  linear-gradient(180deg,#09111f,#08111f 50%,#070d19);}
+body{font-family:'DM Sans','Noto Sans JP',system-ui,sans-serif;color:var(--text);
+  min-height:100dvh;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);
+  -webkit-font-smoothing:antialiased;}
+button,textarea{font:inherit}
+button{border:0;background:none;color:inherit;cursor:pointer}
+
+.shell{position:relative;z-index:1;width:min(calc(100% - 24px),900px);margin:0 auto;padding:16px 0 80px}
+
+.topbar{position:sticky;top:calc(8px + var(--safe-top));z-index:80;margin-bottom:16px}
+.topbar-in{display:flex;align-items:center;gap:12px;padding:12px 18px;border:1px solid var(--line);border-radius:999px;background:rgba(8,14,28,.65);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.brand{display:flex;align-items:center;gap:11px;flex:1;min-width:0}
+.brand-mark{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:18px;background:linear-gradient(135deg,rgba(124,140,255,.26),rgba(84,226,255,.16));border:1px solid rgba(255,255,255,.11);}
+.brand-kicker{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.brand-name{font-size:17px;font-weight:700;letter-spacing:-.03em}
+.brand-name span{color:var(--cyan)}
+.lv-chip{padding:7px 13px;border-radius:999px;background:rgba(68,211,154,.09);border:1px solid rgba(68,211,154,.28);color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+.icon-btn{width:42px;height:42px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.04);display:grid;place-items:center;font-size:17px;transition:.2s}
+.icon-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.17);transform:translateY(-1px)}
+
+.screen{display:none}.screen.active{display:block}
+
+/* HOME */
+.home-hero{text-align:center;padding:24px 16px 20px}
+.home-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:rgba(68,211,154,.08);border:1px solid rgba(68,211,154,.26);color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:14px}
+.home-title{font-size:clamp(28px,5vw,46px);font-weight:700;letter-spacing:-.05em;line-height:1.02;margin-bottom:10px}
+.home-title .hl{background:linear-gradient(90deg,#fff,#98ecff 55%,#96a8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.home-sub{color:var(--soft);font-size:14px;line-height:1.85;max-width:46ch;margin:0 auto}
+
+.expr-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0 24px}
+.expr-chip{padding:10px 8px;border-radius:13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);text-align:center}
+.expr-num{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.1em;margin-bottom:4px}
+.expr-txt{color:var(--soft);font-size:11px;line-height:1.5;font-weight:600}
+.expr-eg{color:var(--dim);font-size:10px;font-style:italic;margin-top:3px;line-height:1.4}
+
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sec-label{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.sec-count{padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.1em}
+.topic-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.topic-btn{padding:15px 13px;border-radius:16px;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);transition:.22s ease;cursor:pointer;}
+.topic-btn:hover{transform:translateY(-3px);border-color:rgba(124,140,255,.4);background:rgba(124,140,255,.07)}
+.t-icon{font-size:22px;margin-bottom:9px;display:block}
+.t-name{font-size:13px;font-weight:700;letter-spacing:-.01em;margin-bottom:3px}
+.t-desc{color:var(--dim);font-size:10px;line-height:1.55}
+
+/* CHAT */
+.chat-wrap{display:grid;gap:10px}
+.chat-hdr{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid var(--line)}
+.back-btn{display:flex;align-items:center;gap:5px;padding:7px 11px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--soft);font-size:12px;font-weight:600;transition:.15s;flex-shrink:0}
+.back-btn:hover{color:var(--text)}
+.chat-tname{flex:1;font-size:14px;font-weight:700;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.turn-pill{padding:6px 11px;border-radius:999px;border:1px solid var(--line);color:var(--dim);font-size:11px;font-weight:700;white-space:nowrap;transition:.3s;flex-shrink:0}
+.turn-pill.warn{color:var(--amber);border-color:rgba(247,185,85,.3)}
+.end-btn{padding:7px 11px;border-radius:11px;border:1px solid rgba(255,107,129,.2);background:rgba(255,107,129,.05);color:var(--red);font-size:12px;font-weight:700;transition:.15s;flex-shrink:0}
+.end-btn:hover{background:rgba(255,107,129,.1)}
+
+.chat-cols{display:grid;grid-template-columns:1fr 220px;gap:10px;align-items:start}
+.chat-left{display:grid;gap:10px}
+.chat-area{border-radius:var(--r);border:1px solid var(--line);background:rgba(8,14,28,.55);overflow:hidden}
+.messages{padding:14px 12px;min-height:340px;max-height:420px;overflow-y:auto;display:grid;gap:12px;align-content:start}
+.messages::-webkit-scrollbar{width:3px}
+.messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+
+.msg-row{display:flex;gap:8px;align-items:flex-start}
+.msg-row.user{flex-direction:row-reverse}
+.av{width:30px;height:30px;flex-shrink:0;border-radius:10px;display:grid;place-items:center;font-size:14px;background:rgba(124,140,255,.13);border:1px solid rgba(124,140,255,.17)}
+.msg-row.user .av{background:rgba(84,226,255,.09);border-color:rgba(84,226,255,.15)}
+.mc{max-width:80%;display:grid;gap:4px}
+.msg-row.user .mc{align-items:end}
+.bbl{padding:10px 13px;border-radius:14px 14px 14px 3px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07)}
+.msg-row.user .bbl{border-radius:14px 14px 3px 14px;background:rgba(124,140,255,.1);border-color:rgba(124,140,255,.15)}
+.en{font-size:13px;line-height:1.75;color:var(--text)}
+.ja{font-size:11px;color:var(--dim);margin-top:2px;line-height:1.5}
+.fq{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
+.fq .en{color:var(--cyan)}
+
+.corr{padding:8px 11px;border-radius:12px;background:rgba(247,185,85,.05);border:1px solid rgba(247,185,85,.18);font-size:11px;line-height:1.6}
+.corr-head{color:var(--amber);font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.cx{color:var(--red);text-decoration:line-through}
+.co{color:var(--green);font-weight:600}
+.cn{color:var(--dim);margin-top:2px}
+
+.bdgs{display:flex;flex-wrap:wrap;gap:3px}
+.bdg{padding:3px 7px;border-radius:7px;background:rgba(68,211,154,.07);border:1px solid rgba(68,211,154,.2);color:var(--green);font-size:10px;font-weight:700}
+
+.dots{display:flex;gap:4px;align-items:center;padding:11px 13px}
+.d{width:5px;height:5px;border-radius:999px;background:var(--dim);animation:b .9s ease-in-out infinite}
+.d:nth-child(2){animation-delay:.15s}.d:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+.inp-wrap{padding:10px 12px;border-top:1px solid var(--line);display:grid;gap:7px}
+.inp-row{display:flex;gap:8px;align-items:flex-end}
+.rec-btn{width:42px;height:42px;flex-shrink:0;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--soft);display:grid;place-items:center;font-size:18px;transition:.2s}
+.rec-btn:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+.rec-btn.on{background:rgba(255,107,129,.1);border-color:rgba(255,107,129,.38);color:var(--red);animation:pr 1.1s ease-in-out infinite}
+@keyframes pr{0%,100%{box-shadow:0 0 0 0 rgba(255,107,129,.2)}50%{box-shadow:0 0 0 7px rgba(255,107,129,0)}}
+.ta{flex:1;min-height:42px;max-height:100px;padding:10px 13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-size:13px;line-height:1.6;resize:none;outline:none;transition:border-color .2s}
+.ta:focus{border-color:rgba(124,140,255,.38)}
+.ta::placeholder{color:var(--dim)}
+.send{width:42px;height:42px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--indigo),var(--cyan));color:#07111f;display:grid;place-items:center;font-size:17px;box-shadow:0 6px 16px rgba(91,111,255,.22);transition:.2s}
+.send:disabled{opacity:.22;pointer-events:none}
+.send:hover{transform:translateY(-1px)}
+.hint{font-size:10px;color:var(--dim);text-align:right}
+
+.sidebar{display:grid;gap:8px;align-content:start;position:sticky;top:80px}
+.sc{padding:13px;border-radius:var(--r);border:1px solid var(--line);background:rgba(255,255,255,.02)}
+.st{font-size:12px;font-weight:700;margin-bottom:2px}
+.ss{color:var(--dim);font-size:10px;margin-bottom:10px;line-height:1.5}
+.trk{display:grid;gap:5px}
+.ti{display:grid;grid-template-columns:auto 1fr auto;gap:7px;align-items:center;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);transition:.2s}
+.ti.done{background:rgba(68,211,154,.05);border-color:rgba(68,211,154,.15)}
+.tt{font-size:10px;color:var(--soft);line-height:1.4}
+.ti.done .tt{color:var(--text)}
+.ut{font-size:9px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.06em}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.sb{padding:9px 7px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);text-align:center}
+.sv{font-size:19px;font-weight:700;letter-spacing:-.04em;margin-bottom:1px}
+.sl{font-size:9px;color:var(--dim)}
+
+/* DONE */
+.done-outer{max-width:560px;margin:0 auto}
+.done-card{padding:28px 22px;border-radius:22px;border:1px solid var(--line);background:rgba(255,255,255,.03);text-align:center;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 24px 80px rgba(0,0,0,.3)}
+.de{font-size:48px;margin-bottom:12px}
+.dt{font-size:clamp(22px,4vw,32px);font-weight:700;letter-spacing:-.04em;margin-bottom:7px}
+.ds{color:var(--soft);font-size:13px;line-height:1.8;margin-bottom:20px}
+.dstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.dst{padding:13px 10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.dv{font-size:26px;font-weight:700;letter-spacing:-.05em;margin-bottom:2px}
+.dl{font-size:10px;color:var(--dim)}
+.delist{text-align:left;margin-bottom:16px;display:grid;gap:5px}
+.dei{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);font-size:11px}
+.dei.done{background:rgba(68,211,154,.05);border-color:rgba(68,211,154,.15)}
+.dcmt{padding:14px;border-radius:14px;background:rgba(124,140,255,.05);border:1px solid rgba(124,140,255,.16);text-align:left;font-size:12px;line-height:1.85;color:var(--soft);margin-bottom:18px}
+.dbtns{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+.bp{min-height:46px;padding:0 20px;border-radius:13px;background:linear-gradient(135deg,var(--indigo),var(--cyan));color:#07111f;font-weight:700;font-size:13px;transition:.2s}
+.bp:hover{transform:translateY(-1px)}
+.bs{min-height:46px;padding:0 20px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-weight:700;font-size:13px;transition:.2s}
+.bs:hover{border-color:rgba(255,255,255,.22)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(4,8,20,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:none;place-items:center;padding:20px}
+.modal-overlay.open{display:grid}
+.modal{max-width:440px;width:100%;padding:24px;border-radius:var(--r);border:1px solid var(--line2);background:linear-gradient(160deg,#111d36,#0d1830);box-shadow:0 24px 80px rgba(0,0,0,.34)}
+.mhd{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:18px}
+.mtitle{font-size:17px;font-weight:700;letter-spacing:-.03em;margin-bottom:4px}
+.msub{color:var(--dim);font-size:12px;line-height:1.7}
+.mx{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);display:grid;place-items:center;font-size:12px;color:var(--dim);transition:.15s}
+.mx:hover{color:var(--text)}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:6px}
+.field input{width:100%;padding:10px 13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-size:13px;outline:none;transition:border-color .2s}
+.field input:focus{border-color:rgba(124,140,255,.38)}
+.fn{color:var(--dim);font-size:10px;line-height:1.6;margin-top:4px}
+.mbtns{display:flex;gap:8px;margin-top:18px}
+.mbp{flex:1;min-height:44px;border-radius:12px;background:linear-gradient(135deg,var(--indigo),var(--cyan));color:#07111f;font-weight:700;transition:.2s}
+.mbs{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-weight:700;transition:.2s}
+
+.no-key-banner{
+  display:none;align-items:center;gap:10px;padding:10px 14px;border-radius:13px;
+  background:rgba(247,185,85,.07);border:1px solid rgba(247,185,85,.25);
+  font-size:12px;color:var(--amber);line-height:1.5;
+}
+.no-key-banner.show{display:flex}
+.no-key-banner a{color:var(--amber);font-weight:700;text-decoration:underline;cursor:pointer}
+  .topic-grid{grid-template-columns:repeat(2,1fr)}
+  .chat-cols{grid-template-columns:1fr}
+  .sidebar{position:static;grid-template-columns:1fr 1fr}
+  .expr-strip{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:380px){.expr-strip{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="topbar-in">
+      <div class="brand">
+        <div class="brand-mark">💬</div>
+        <div>
+          <div class="brand-kicker">makieigo</div>
+          <div class="brand-name">Speak <span>Up</span></div>
+        </div>
+      </div>
+      <div class="lv-chip">A1 · A2</div>
+      <button class="icon-btn" onclick="openModal()">⚙️</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home" class="screen active">
+    <div class="home-hero">
+      <div class="home-badge">🌱 Beginner Friendly</div>
+      <h1 class="home-title">Chat your way<br>to <span class="hl">fluency</span></h1>
+      <p class="home-sub">AIコーチと英語でおしゃべり。間違えてもOK！やさしい英語で会話を楽しもう。返答はすべて日本語訳付きです。</p>
+    </div>
+    <div class="expr-strip" id="homeExprs"></div>
+    <div class="sec-head">
+      <div class="sec-label">トピックを選ぶ</div>
+      <div class="sec-count">8 TOPICS</div>
+    </div>
+    <div class="topic-grid" id="topicGrid"></div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="chat" class="screen">
+    <div class="chat-wrap">
+      <div class="chat-hdr">
+        <button class="back-btn" onclick="goHome()">← Back</button>
+        <div class="chat-tname" id="chatTopic">—</div>
+        <div class="turn-pill" id="turnPill">0 / 5</div>
+        <button class="end-btn" onclick="endSession()">終了</button>
+      </div>
+      <div class="chat-cols">
+        <div class="chat-left">
+          <div id="noKeyBanner" class="no-key-banner">
+            ⚠️ <span>AIコーチが未設定です。<a onclick="openModal()">⚙️ APIキーを設定</a>すると自然な会話になります。今はシンプルモードで動作中。</span>
+          </div>
+          <div class="chat-area">
+            <div class="messages" id="msgs"></div>
+            <div class="inp-wrap">
+              <div class="inp-row">
+                <button class="rec-btn" id="recBtn" onclick="toggleRec()">🎤</button>
+                <textarea class="ta" id="ta" placeholder="英語で答えてみよう！間違えても大丈夫😊" rows="1"></textarea>
+                <button class="send" id="sendBtn" onclick="send()" disabled>→</button>
+              </div>
+              <div class="hint" id="hint">まずは一文からどうぞ</div>
+            </div>
+          </div>
+        </div>
+        <div class="sidebar">
+          <div class="sc">
+            <div class="st">🎯 表現チェッカー</div>
+            <div class="ss">使えたら自動でチェック！</div>
+            <div class="trk" id="tracker"></div>
+          </div>
+          <div class="sc">
+            <div class="st">📊 今日の記録</div>
+            <div class="ss"></div>
+            <div class="stats">
+              <div class="sb"><div class="sv" id="sTurns">0</div><div class="sl">ターン</div></div>
+              <div class="sb"><div class="sv" id="sExpr" style="color:var(--green)">0/5</div><div class="sl">表現</div></div>
+              <div class="sb"><div class="sv" id="sCorr" style="color:var(--amber)">0</div><div class="sl">添削</div></div>
+              <div class="sb"><div class="sv" id="sWords">0</div><div class="sl">単語</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div id="done" class="screen">
+    <div class="done-outer">
+      <div class="done-card">
+        <div class="de">🎉</div>
+        <h2 class="dt">お疲れさまでした！</h2>
+        <p class="ds" id="doneSub"></p>
+        <div class="dstats">
+          <div class="dst"><div class="dv" id="dTurns" style="color:var(--cyan)">0</div><div class="dl">ターン</div></div>
+          <div class="dst"><div class="dv" id="dExpr" style="color:var(--green)">0/5</div><div class="dl">目標表現</div></div>
+          <div class="dst"><div class="dv" id="dWords" style="color:var(--amber)">0</div><div class="dl">単語数</div></div>
+        </div>
+        <div class="delist" id="doneExpr"></div>
+        <div class="dcmt" id="doneCmt">コメントを生成中…</div>
+        <div class="dbtns">
+          <button class="bp" onclick="goHome()">🏠 ホームへ</button>
+          <button class="bs" id="retryBtn">🔄 もう一度</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="mhd">
+      <div>
+        <div class="mtitle">⚙️ API Key Settings</div>
+        <p class="msub">音声認識とAIコーチの設定です。キーはこのデバイスにのみ保存されます。</p>
+      </div>
+      <button class="mx" onclick="closeModal()">✕</button>
+    </div>
+    <div class="field">
+      <label>Anthropic API Key（Claude AIコーチ）</label>
+      <input type="password" id="antKey" placeholder="sk-ant-..."/>
+      <div class="fn">設定するとAIの返答・添削が有効になります。</div>
+    </div>
+    <div class="field">
+      <label>OpenAI API Key（Whisper 音声認識）</label>
+      <input type="password" id="oaiKey" placeholder="sk-..."/>
+      <div class="fn">未設定時はブラウザ標準の音声認識を使います。</div>
+    </div>
+    <div class="mbtns">
+      <button class="mbs" onclick="closeModal()">Cancel</button>
+      <button class="mbp" onclick="saveKeys()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXPRS=[
+  {t:"I like ~ because ~",   p:/\bi like\b.{1,60}\bbecause\b/i,  eg:"I like summer because it is warm."},
+  {t:"My favorite ~ is ~",   p:/\bmy fav(ou?rite)?\b/i,          eg:"My favorite food is ramen."},
+  {t:"I think (that) ~",     p:/\bi think\b/i,                   eg:"I think English is fun!"},
+  {t:"I want to ~",          p:/\bi (want to|wanna|'d like to|would like to)\b/i, eg:"I want to visit Canada."},
+  {t:"very / really ~",      p:/\b(very|really|so|quite) \w+/i,  eg:"It is really delicious!"},
+];
+const TOPICS=[
+  {id:1,icon:"👤",name:"About Me",      desc:"自己紹介・出身・家族",
+   s:"Hello! Nice to meet you! 😊 My name is Speak. Can you tell me your name and where you're from?",
+   sj:"こんにちは！はじめまして！私はSpeakといいます。あなたの名前と出身地を教えてください。"},
+  {id:2,icon:"🏠",name:"Daily Life",    desc:"朝のルーティン・生活習慣",
+   s:"Let's talk about your daily life! ☀️ What time do you usually wake up in the morning?",
+   sj:"日常生活について話しましょう！朝は何時に起きますか？"},
+  {id:3,icon:"🍜",name:"Food",          desc:"好きな食べ物・料理・飲み物",
+   s:"I love talking about food! 🍜 What's your favorite food?",
+   sj:"食べ物の話が大好き！あなたの一番好きな食べ物は何ですか？"},
+  {id:4,icon:"🎮",name:"Hobbies",       desc:"趣味・自由時間の過ごし方",
+   s:"Let's talk about hobbies! 🎮 What do you like to do in your free time?",
+   sj:"趣味について話しましょう！自由な時間には何をするのが好きですか？"},
+  {id:5,icon:"🏙️",name:"My Town",       desc:"住んでいる場所・町の魅力",
+   s:"I'm curious where you live! 🏙️ Is your home in a big city or a small town?",
+   sj:"住んでいる場所を教えてください！大きな街ですか、小さな町ですか？"},
+  {id:6,icon:"🐾",name:"Animals",       desc:"動物・ペット・好きな生き物",
+   s:"Let's talk about animals! 🐱 Do you have a pet? Or what's your favorite animal?",
+   sj:"動物について話しましょう！ペットはいますか？好きな動物は何ですか？"},
+  {id:7,icon:"🌤️",name:"Seasons",       desc:"天気・季節・気候の好み",
+   s:"Do you like the four seasons in Japan? 🌸 What's your favorite season and why?",
+   sj:"日本の四季は好きですか？一番好きな季節とその理由を教えてください。"},
+  {id:8,icon:"✏️",name:"English Study", desc:"英語学習の目標・経験",
+   s:"I'm so glad you're learning English! 😊 Why are you studying English?",
+   sj:"英語を勉強しているんですね！どうして英語を学んでいるのですか？"},
+];
+
+let tid=null,msgs=[],turn=0,exprDone=[false,false,false,false,false],corrs=0,words=0,busy=false;
+let isRec=false,recognition=null,mediaRec=null,audioChunks=[];
+const MAX=5;
+
+function init(){
+  document.getElementById('homeExprs').innerHTML=EXPRS.map((e,i)=>`
+    <div class="expr-chip"><div class="expr-num">${i+1}</div><div class="expr-txt">${e.t}</div><div class="expr-eg">${e.eg}</div></div>`).join('');
+  document.getElementById('topicGrid').innerHTML=TOPICS.map(t=>`
+    <button class="topic-btn" onclick="startChat(${t.id})">
+      <span class="t-icon">${t.icon}</span><div class="t-name">${t.name}</div><div class="t-desc">${t.desc}</div>
+    </button>`).join('');
+  document.getElementById('retryBtn').onclick=()=>startChat(tid);
+  document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+  const ta=document.getElementById('ta');
+  ta.addEventListener('input',onInput);
+  ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+}
+
+function startChat(id){
+  const t=TOPICS.find(x=>x.id===id);if(!t)return;
+  tid=id;msgs=[];turn=0;exprDone=[false,false,false,false,false];corrs=0;words=0;busy=false;
+  document.getElementById('chatTopic').textContent=`${t.icon} ${t.name}`;
+  document.getElementById('ta').value='';document.getElementById('sendBtn').disabled=true;
+  msgs.push({r:'ai',en:t.s,ja:t.sj,fq:'',fja:'',corr:null});
+  // show banner if no API key
+  const banner=document.getElementById('noKeyBanner');
+  if(banner)banner.className='no-key-banner'+(localStorage.getItem('antKey')?'':' show');
+  show('chat');renderMsgs();renderTracker();updateStats();
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(()=>{scrollBot();document.getElementById('ta').focus()},120);
+}
+
+function renderMsgs(){
+  document.getElementById('msgs').innerHTML=msgs.map(m=>{
+    if(m.r==='typing')return`<div class="msg-row"><div class="av">🤖</div><div class="mc"><div class="bbl" style="border-radius:14px 14px 14px 3px"><div class="dots"><div class="d"></div><div class="d"></div><div class="d"></div></div></div></div></div>`;
+    if(m.r==='ai')return`<div class="msg-row"><div class="av">🤖</div><div class="mc"><div class="bbl"><div class="en">${esc(m.en)}</div>${m.ja?`<div class="ja">${esc(m.ja)}</div>`:''} ${m.fq?`<div class="fq"><div class="en">${esc(m.fq)}</div>${m.fja?`<div class="ja">${esc(m.fja)}</div>`:''}</div>`:''}</div>${m.corr?`<div class="corr"><div class="corr-head">✏️ Correction</div><div><span class="cx">${esc(m.corr.o)}</span> → <span class="co">${esc(m.corr.f)}</span></div>${m.corr.n?`<div class="cn">${esc(m.corr.n)}</div>`:''}</div>`:''}</div></div>`;
+    if(m.r==='user'){
+      const bs=EXPRS.filter((_,i)=>m.eu&&m.eu[i]).map(e=>`<span class="bdg">✓ ${esc(e.t.split(' ~ ')[0])}</span>`).join('');
+      return`<div class="msg-row user"><div class="av">👤</div><div class="mc"><div class="bbl"><div class="en">${esc(m.txt)}</div></div>${bs?`<div class="bdgs">${bs}</div>`:''}</div></div>`;
+    }
+    return'';
+  }).join('');
+}
+
+function renderTracker(){
+  document.getElementById('tracker').innerHTML=EXPRS.map((e,i)=>`
+    <div class="ti ${exprDone[i]?'done':''}"><span>${exprDone[i]?'✅':'⬜'}</span><span class="tt">${e.t}</span>${exprDone[i]?'<span class="ut">Used!</span>':''}</div>`).join('');
+}
+
+function updateStats(){
+  const u=exprDone.filter(Boolean).length;
+  document.getElementById('sTurns').textContent=turn;
+  document.getElementById('sExpr').textContent=`${u}/5`;
+  document.getElementById('sCorr').textContent=corrs;
+  document.getElementById('sWords').textContent=words;
+  const p=document.getElementById('turnPill');
+  p.textContent=`${turn} / ${MAX}`;
+  p.className='turn-pill'+(turn>=MAX-1?' warn':'');
+}
+
+async function send(){
+  const ta=document.getElementById('ta');
+  const txt=ta.value.trim();if(!txt||busy)return;
+  ta.value='';ta.style.height='auto';document.getElementById('sendBtn').disabled=true;
+  const eu=EXPRS.map(e=>e.p.test(txt));
+  eu.forEach((v,i)=>{if(v)exprDone[i]=true});
+  words+=txt.split(/\s+/).filter(Boolean).length;turn++;
+  msgs.push({r:'user',txt,eu});renderMsgs();renderTracker();updateStats();scrollBot();
+  busy=true;msgs.push({r:'typing'});renderMsgs();scrollBot();
+  try{
+    const resp=await callAI(txt,turn>=MAX);
+    if(resp&&resp.corr)corrs++;
+    msgs=msgs.filter(m=>m.r!=='typing');
+    msgs.push({r:'ai',en:resp.en,ja:resp.ja,fq:resp.fq||'',fja:resp.fja||'',corr:resp.corr||null});
+    renderMsgs();renderTracker();updateStats();scrollBot();
+    if(turn>=MAX)setTimeout(endSession,1400);
+  }catch{
+    msgs=msgs.filter(m=>m.r!=='typing');
+    msgs.push({r:'ai',en:"Nice! 😊 Keep going!",ja:"いいですね！続けましょう！",fq:"Can you tell me more?",fja:"もう少し教えてもらえますか？",corr:null});
+    renderMsgs();scrollBot();
+  }finally{
+    busy=false;document.getElementById('sendBtn').disabled=false;
+    setTimeout(()=>document.getElementById('ta').focus(),80);
+  }
+}
+
+async function callAI(txt,isLast){
+  const key=localStorage.getItem('antKey');
+  if(!key)return getFallback(txt);
+  const t=TOPICS.find(x=>x.id===tid);
+  const hist=msgs.filter(m=>m.r==='ai'||m.r==='user')
+    .map(m=>m.r==='ai'?`Coach: ${m.en}${m.fq?' '+m.fq:''}`:`Student: ${m.txt}`).join('\n');
+  const sys=isLast
+    ?`You are a warm English coach. Give a short genuine closing message (1-2 sentences, simple A1-A2 English). Optionally fix one error. Return ONLY JSON: {"en":"...","ja":"...","fq":"","fja":"","corr":null or {"o":"...","f":"...","n":"..."}}`
+    :`You are a friendly natural English conversation partner for A1-A2 Japanese learners.
+Topic: ${t.name} (${t.desc})
+React genuinely to what the student said (1-2 short sentences, simple vocab). Fix ONE clear grammar error if needed — skip if their English is OK. Ask ONE casual follow-up question. Add Japanese translations.
+Return ONLY JSON: {"en":"response","ja":"日本語訳","fq":"follow-up","fja":"日本語訳","corr":null or {"o":"error","f":"fix","n":"日本語解説"}}`;
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:sys,
+      messages:[{role:'user',content:`Conversation:\n${hist}\n\nStudent: "${txt}"`}]})
+  });
+  if(!res.ok)throw new Error(res.status);
+  const d=await res.json();
+  const raw=d.content[0].text.trim();
+  let json;try{json=JSON.parse(raw)}catch{const m=raw.match(/\{[\s\S]*\}/);json=m?JSON.parse(m[0]):null}
+  if(!json)throw new Error('parse');
+  return json;
+}
+
+// Pre-scripted conversation flows per topic (no API needed)
+const FLOWS={
+  1:[ // About Me
+    {en:"Nice to meet you! 😊",ja:"はじめまして！",fq:"Do you have any brothers or sisters?",fja:"兄弟や姉妹はいますか？"},
+    {en:"I see! Sounds like a nice family.",ja:"なるほど！素敵な家族ですね。",fq:"What do you do — do you work or study?",fja:"お仕事ですか、それとも学生ですか？"},
+    {en:"That's cool! You sound busy. 😄",ja:"いいですね！忙しそうです。",fq:"What do you like to do on weekends?",fja:"週末は何をするのが好きですか？"},
+    {en:"Oh that sounds really fun!",ja:"それは楽しそうですね！",fq:"Do you enjoy studying English? Why or why not?",fja:"英語の勉強は好きですか？理由も教えてください。"},
+    {en:"Great! You're doing so well! 🎉",ja:"素晴らしい！とてもよく頑張っています！",fq:"",fja:""},
+  ],
+  2:[ // Daily Life
+    {en:"Wow, early riser! 🌅 That's healthy.",ja:"早起きですね！健康的です。",fq:"What do you usually eat for breakfast?",fja:"朝食は何を食べますか？"},
+    {en:"Yum! That sounds good. 😋",ja:"おいしそうですね！",fq:"How do you go to work or school every day?",fja:"毎日どうやって通勤・通学していますか？"},
+    {en:"I see! That must take a while.",ja:"なるほど！時間がかかりそうですね。",fq:"What do you do in the evening after work or school?",fja:"仕事や学校の後、夜は何をしますか？"},
+    {en:"Sounds like a great evening routine!",ja:"素敵な夜のルーティンですね！",fq:"What time do you usually go to sleep?",fja:"普段何時に寝ますか？"},
+    {en:"Nice! A good routine is so important. 👍",ja:"いいですね！規則正しい生活は大切ですね。",fq:"",fja:""},
+  ],
+  3:[ // Food
+    {en:"Ooh, that sounds delicious! 😋",ja:"おいしそうですね！",fq:"Do you like to cook at home?",fja:"家で料理するのは好きですか？"},
+    {en:"Nice! Home cooking is the best.",ja:"いいですね！自炊が一番ですよね。",fq:"What do you usually eat for lunch?",fja:"昼食は何を食べることが多いですか？"},
+    {en:"That sounds tasty! Simple meals are great.",ja:"おいしそう！シンプルな食事が一番ですね。",fq:"Is there any food you really don't like?",fja:"苦手な食べ物はありますか？"},
+    {en:"Ha! I understand completely. 😄",ja:"わかります！笑",fq:"Have you ever tried food from another country?",fja:"外国の料理を食べたことはありますか？"},
+    {en:"So adventurous! I love that spirit. 🌍",ja:"チャレンジャーですね！素晴らしいです。",fq:"",fja:""},
+  ],
+  4:[ // Hobbies
+    {en:"Oh, that sounds like so much fun! 🎉",ja:"それは楽しそうですね！",fq:"How often do you do that?",fja:"どのくらいの頻度でそれをしますか？"},
+    {en:"Wow, that's quite often! You must love it.",ja:"すごい！本当に好きなんですね。",fq:"Who do you usually do it with — alone or with friends?",fja:"一人でやりますか？それとも友達と？"},
+    {en:"Nice! That sounds like a great time.",ja:"いいですね！楽しそうです。",fq:"When did you first start that hobby?",fja:"その趣味はいつから始めましたか？"},
+    {en:"Oh interesting! So you've been doing it a while.",ja:"なるほど！もう結構やっているんですね。",fq:"Is there a new hobby you'd like to try someday?",fja:"いつかやってみたい新しい趣味はありますか？"},
+    {en:"That sounds amazing! I hope you get to try it. 😊",ja:"素晴らしい！ぜひ挑戦してほしいです。",fq:"",fja:""},
+  ],
+  5:[ // My Town
+    {en:"That sounds like a really nice place to live!",ja:"素敵な場所に住んでいるんですね！",fq:"What do you like about your town?",fja:"あなたの町のどんなところが好きですか？"},
+    {en:"That's wonderful! It sounds very lively.",ja:"いいですね！活気がありそうです。",fq:"Is there a good restaurant or café near your home?",fja:"家の近くに好きなレストランやカフェはありますか？"},
+    {en:"Oh, I'd love to go there! 😄",ja:"いいですね！私も行ってみたいです。",fq:"How long have you lived in that area?",fja:"そのエリアにはどのくらい住んでいますか？"},
+    {en:"Wow, quite a long time! You must know it well.",ja:"結構長いですね！きっとよく知っているんでしょう。",fq:"Is there anything you wish was different about your town?",fja:"町のここがもっとこうだったらいいのに、と思うことはありますか？"},
+    {en:"Ha! Every town has something like that. 😄",ja:"笑！どんな町にもそういうことはありますよね。",fq:"",fja:""},
+  ],
+  6:[ // Animals
+    {en:"Aww, how cute! 🐾",ja:"かわいいですね！",fq:"What do you like about that animal?",fja:"その動物のどんなところが好きですか？"},
+    {en:"I totally understand! They're amazing.",ja:"すごくわかります！素晴らしい動物ですよね。",fq:"Have you ever had a pet before?",fja:"これまでにペットを飼ったことはありますか？"},
+    {en:"Oh how sweet! Pets are the best. 🐶",ja:"かわいい！ペットって最高ですよね。",fq:"Do you prefer cats or dogs in general?",fja:"全体的に犬と猫、どちらが好きですか？"},
+    {en:"Ha! The eternal question. 😄",ja:"笑！永遠のテーマですね。",fq:"If you could have any animal as a pet, what would it be?",fja:"どんな動物でもペットにできるとしたら、何を選びますか？"},
+    {en:"Oh wow, great choice! That would be amazing. 🌟",ja:"わあ、いい選択ですね！素晴らしいです。",fq:"",fja:""},
+  ],
+  7:[ // Seasons
+    {en:"Oh nice! That's a great season. 🌸",ja:"いいですね！素敵な季節ですね。",fq:"What do you usually do in that season?",fja:"その季節には何をすることが多いですか？"},
+    {en:"That sounds really fun and relaxing!",ja:"楽しくてリラックスできそうですね！",fq:"What is the weather like in your area right now?",fja:"今、あなたの地域の天気はどうですか？"},
+    {en:"I see! Sounds very typical for Japan.",ja:"なるほど！日本らしいですね。",fq:"Do you like hot weather or cold weather?",fja:"暑い天気と寒い天気、どちらが好きですか？"},
+    {en:"Ha! That makes sense. 😄",ja:"笑！それは納得ですね。",fq:"What's your favorite thing to eat or drink in summer?",fja:"夏に好きな食べ物や飲み物は何ですか？"},
+    {en:"Yum! That sounds perfect for summer. 😋",ja:"おいしそう！夏にぴったりですね。",fq:"",fja:""},
+  ],
+  8:[ // English Study
+    {en:"That's a great reason to learn! 💪",ja:"英語を学ぶ素晴らしい理由ですね！",fq:"How long have you been studying English?",fja:"英語の勉強はどのくらい続けていますか？"},
+    {en:"Wow, you've been at it a while! Keep going!",ja:"もう結構やっているんですね！続けていきましょう！",fq:"What is the hardest part of learning English for you?",fja:"英語学習で一番難しいと感じることは何ですか？"},
+    {en:"Yes, that's a challenge for many people!",ja:"それは多くの人が感じる課題ですね！",fq:"What do you do to practice English every day?",fja:"毎日どんな英語の練習をしていますか？"},
+    {en:"That's a smart way to practice! 👍",ja:"賢い練習方法ですね！",fq:"What would you like to do with your English in the future?",fja:"将来、英語でどんなことをしてみたいですか？"},
+    {en:"I love that goal! You can do it! 🌟",ja:"素晴らしい目標ですね！きっとできますよ！",fq:"",fja:""},
+  ],
+};
+
+function getFallback(txt){
+  const t=txt.toLowerCase().trim();
+  const wc=t.split(/\s+/).filter(Boolean).length;
+  // Too short → encourage more
+  if(wc<=1||/^(hi|hello|hey|ok|okay|yes|no|um|hmm)$/i.test(t)){
+    return{
+      en:"Don't be shy! 😊 Try to answer with a full sentence.",
+      ja:"恥ずかしがらないで！一文で答えてみよう。",
+      fq:TOPICS.find(x=>x.id===tid)?.s||"Can you tell me more?",
+      fja:TOPICS.find(x=>x.id===tid)?.sj||"もう少し話してください。",
+      corr:null
+    };
+  }
+  const flow=FLOWS[tid]||FLOWS[1];
+  // use turn index (capped to flow length)
+  const idx=Math.min(turn-1,flow.length-1);
+  return{...flow[idx],corr:null};
+}
+
+function endSession(){
+  const u=exprDone.filter(Boolean).length;
+  const t=TOPICS.find(x=>x.id===tid);
+  document.getElementById('doneSub').textContent=`「${t.name}」で${turn}ターン会話しました！`;
+  document.getElementById('dTurns').textContent=turn;
+  document.getElementById('dExpr').textContent=`${u}/5`;
+  document.getElementById('dWords').textContent=words;
+  document.getElementById('doneExpr').innerHTML=EXPRS.map((e,i)=>`
+    <div class="dei ${exprDone[i]?'done':''}"><span>${exprDone[i]?'✅':'⬜'}</span><span style="flex:1">${e.t}</span>${exprDone[i]?'<span style="font-size:9px;font-weight:800;color:var(--green);text-transform:uppercase">USED!</span>':''}</div>`).join('');
+  show('done');window.scrollTo({top:0,behavior:'smooth'});
+  genComment(turn,u,words);
+}
+
+async function genComment(t,u,w){
+  const el=document.getElementById('doneCmt');
+  const key=localStorage.getItem('antKey');
+  if(!key){
+    const msgs2=[
+      `${t}ターン、${w}語で英語を話せました！すごいですよ。${u}つの目標表現も使えましたね。この調子で毎日少しずつ練習を続けていきましょう！😊`,
+      `${w}語も英語で話しました！${u >= 3 ? '目標表現を'+u+'つも使えて、本当に素晴らしいです！' : 'もっと目標表現を使ってみると、さらにレベルアップできますよ。'}次回もぜひチャレンジしてください！`,
+      `今日は${t}回の会話ができましたね！英語で話す練習を続けることが一番大切です。少しずつ表現が増えていきますよ。次もまた頑張りましょう！🌟`,
+    ];
+    el.textContent=msgs2[t%msgs2.length];
+    return;
+  }
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:280,
+        system:'Write a warm, specific, encouraging session summary in natural Japanese for an A1-A2 English learner. 3 sentences max. No JSON.',
+        messages:[{role:'user',content:`${t} turns, ${w} words, ${u}/5 expressions, ${corrs} corrections. Write in Japanese.`}]})
+    });
+    const d=await res.json();el.textContent=d.content[0].text.trim();
+  }catch{el.textContent=`${t}ターンを完了し、${w}語を話しました！${u}つの目標表現も使えました。この調子で毎日練習を続けましょう😊`}
+}
+
+function toggleRec(){isRec?stopRec():startRec()}
+function startRec(){localStorage.getItem('oaiKey')?startWhisper():startBrowser()}
+function startBrowser(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('音声認識非対応です。テキスト入力をご利用ください。');return}
+  recognition=new SR();recognition.lang='en-US';recognition.continuous=false;recognition.interimResults=true;
+  recognition.onresult=e=>{document.getElementById('ta').value=Array.from(e.results).map(r=>r[0].transcript).join('');onInput()};
+  recognition.onerror=()=>stopRec();
+  recognition.onend=()=>{isRec=false;document.getElementById('recBtn').classList.remove('on')};
+  recognition.start();isRec=true;document.getElementById('recBtn').classList.add('on');
+}
+async function startWhisper(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioChunks=[];mediaRec=new MediaRecorder(stream);
+    mediaRec.ondataavailable=e=>audioChunks.push(e.data);
+    mediaRec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());await transcribe(new Blob(audioChunks,{type:'audio/webm'}))};
+    mediaRec.start();isRec=true;document.getElementById('recBtn').classList.add('on');
+  }catch{startBrowser()}
+}
+async function transcribe(blob){
+  const btn=document.getElementById('recBtn');btn.textContent='⏳';btn.disabled=true;
+  try{
+    const fd=new FormData();fd.append('file',blob,'audio.webm');fd.append('model','whisper-1');fd.append('language','en');
+    const res=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':`Bearer ${localStorage.getItem('oaiKey')}`},body:fd});
+    const d=await res.json();if(d.text){document.getElementById('ta').value=d.text;onInput()}
+  }catch(e){console.error(e)}
+  finally{btn.textContent='🎤';btn.disabled=false}
+}
+function stopRec(){
+  if(recognition){recognition.stop();recognition=null}
+  if(mediaRec&&mediaRec.state==='recording')mediaRec.stop();
+  isRec=false;document.getElementById('recBtn').classList.remove('on');
+}
+
+function onInput(){
+  const v=document.getElementById('ta').value.trim();
+  const n=v.split(/\s+/).filter(Boolean).length;
+  document.getElementById('sendBtn').disabled=n<1;
+  const h=document.getElementById('hint');
+  h.textContent=n===0?'まずは一文からどうぞ':n<4?`${n} words — もう少し話してみよう！`:n<12?`${n} words — いいですね！`:`${n} words — 素晴らしい！`;
+  const ta=document.getElementById('ta');ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,100)+'px';
+}
+function scrollBot(){const c=document.getElementById('msgs');setTimeout(()=>c.scrollTo({top:c.scrollHeight,behavior:'smooth'}),80)}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function goHome(){stopRec();show('home');window.scrollTo({top:0,behavior:'smooth'})}
+function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function openModal(){document.getElementById('antKey').value=localStorage.getItem('antKey')||'';document.getElementById('oaiKey').value=localStorage.getItem('oaiKey')||'';document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+function saveKeys(){
+  const a=document.getElementById('antKey').value.trim();const o=document.getElementById('oaiKey').value.trim();
+  if(a)localStorage.setItem('antKey',a);else localStorage.removeItem('antKey');
+  if(o)localStorage.setItem('oaiKey',o);else localStorage.removeItem('oaiKey');
+  closeModal();
+  const banner=document.getElementById('noKeyBanner');
+  if(banner)banner.className='no-key-banner'+(localStorage.getItem('antKey')?'':' show');
+}
+init();
+</script>
+</body>
+</html>
